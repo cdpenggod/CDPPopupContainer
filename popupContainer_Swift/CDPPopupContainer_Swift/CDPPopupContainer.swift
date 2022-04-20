@@ -46,6 +46,8 @@ class CDPPopupContainer: UIViewController {
     public var forbidPanGesture: Bool = false
     /// 拖动结束时，弹层露出高度 / 整体弹出总高度 小于 disappearWhenPanGestureEnd，则弹层消失 (默认 0.5)
     public var disappearWhenPanGestureEnd: CGFloat = 0.5
+    /// 是否支持 当拖动速度过大时，拖动结束后弹层消失 (默认 YES)
+    public var disappearWhenVelocityHigh: Bool = true
     /// 背景蒙层透明度 (默认 0.5)
     public var dimmingAlpha: CGFloat = 0.5 {
         didSet {
@@ -256,10 +258,15 @@ private extension CDPPopupContainer {
             view.frame = CGRect(x: 0, y: max(0, endY), width: view.bounds.size.width, height: max(0, popupHeight))
         } else {
             //手势结束
+            //判断速度是否过大
+            let speed = panGesture.velocity(in: view)
+            let isSpeedHigh = (speed.x > 920 || speed.y > 920)
+            let needDisappearAboutSpeed = (disappearWhenVelocityHigh && isSpeedHigh)
+            
             //当前弹层显示出的高度
             let showHeight = min(popupHeight, popupHeight - endY)
             //判断当前显示的高度是否达到消失条件
-            if (showHeight / popupHeight) < disappearWhenPanGestureEnd {
+            if ((showHeight / popupHeight) < disappearWhenPanGestureEnd) || needDisappearAboutSpeed {
                 //回调
                 delegate?.popupContainerWillDisappearWhenPanGestureEnd?(container: self)
                 //退出
